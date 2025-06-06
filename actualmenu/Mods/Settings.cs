@@ -35,6 +35,11 @@ namespace WristMenu.Mods
             fpsCounter = false;
         }
 
+        public static void TogglePingDisplay(bool v)
+        {
+            pingDisplay = v;
+        }
+
         public static void EnableNotifications()
         {
             disableNotifications = false;

@@ -8,7 +8,7 @@ namespace WristMenu.Classes
         public GradientColorKey[] colors = new GradientColorKey[]
         {
             new GradientColorKey(Color.black, 0f),
-            new GradientColorKey(Color.magenta, 0.5f),
+            new GradientColorKey(new Color32(119, 0, 255, 255), 0.5f),
             new GradientColorKey(Color.black, 1f)
         };
 

@@ -431,6 +431,7 @@
   <ItemGroup>
     <Compile Include="Classes\ButtonCollider.cs" />
     <Compile Include="Classes\ButtonInfo.cs" />
+    <Compile Include="Classes\ClampColor.cs" />
     <Compile Include="Classes\ColorChanger.cs" />
     <Compile Include="Classes\ExtGradient.cs" />
     <Compile Include="Classes\RigManager.cs" />

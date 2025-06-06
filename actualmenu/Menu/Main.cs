@@ -1,16 +1,15 @@
 ﻿using BepInEx;
-using GorillaLocomotion;
 using HarmonyLib;
+using WristMenu.Classes;
+using WristMenu.Notifications;
 using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
-using WristMenu.Classes;
-using WristMenu.Notifications;
-using WristMenu.Patches;
 using static WristMenu.Menu.Buttons;
 using static WristMenu.Settings;
+using Photon.Pun;
 
 namespace WristMenu.Menu
 {
@@ -19,61 +18,59 @@ namespace WristMenu.Menu
     public class Main : MonoBehaviour
     {
         // Constant
+
+        public static bool ForceMenu;
+
         public static void Prefix()
         {
             // Initialize Menu
                 try
                 {
-                    bool toOpen = (!rightHanded && ControllerInputPoller.instance.leftControllerSecondaryButton) || (rightHanded && ControllerInputPoller.instance.rightControllerSecondaryButton);
-                    bool keyboardOpen = UnityInput.Current.GetKey(keyboardButton);
+                    if (!ForceMenu)
+                    {
 
-                    if (menu == null)
-                    {
-                        if (toOpen || keyboardOpen)
+                        bool toOpen = (!rightHanded && ControllerInputPoller.instance.leftControllerSecondaryButton) || (rightHanded && ControllerInputPoller.instance.rightControllerSecondaryButton);
+                        bool keyboardOpen = UnityInput.Current.GetKey(keyboardButton);
+
+                        if (menu == null)
                         {
-                            CreateMenu();
-                            if (keyboardOpen)
+                            if (toOpen || keyboardOpen)
                             {
-                                RecenterMenu(false, keyboardOpen);
+                                CreateMenu();
+                                RecenterMenu(rightHanded, keyboardOpen);
+                                if (reference == null)
+                                {
+                                    CreateReference(rightHanded);
+                                }
                             }
-                            if (reference == null)
-                            {
-                                CreateReference(rightHanded);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (keyboardOpen)
-                        {
-                            RecenterMenu(false, keyboardOpen);
                         }
                         else
                         {
-                            GameObject.Find("Shoulder Camera").transform.Find("CM vcam1").gameObject.SetActive(true);
-
-                            Rigidbody comp = menu.AddComponent(typeof(Rigidbody)) as Rigidbody;
-                            if (rightHanded)
+                            if ((toOpen || keyboardOpen))
                             {
-                                comp.velocity = GorillaLocomotion.GTPlayer.Instance.rightHandCenterVelocityTracker.GetAverageVelocity(true, 0);
+                                RecenterMenu(rightHanded, keyboardOpen);
                             }
                             else
                             {
-                                comp.velocity = GorillaLocomotion.GTPlayer.Instance.leftHandCenterVelocityTracker.GetAverageVelocity(true, 0);
+                                GameObject.Find("Shoulder Camera").transform.Find("CM vcam1").gameObject.SetActive(true);
+
+                                Rigidbody comp = menu.AddComponent(typeof(Rigidbody)) as Rigidbody;
+                                if (rightHanded)
+                                {
+                                    comp.velocity = GorillaLocomotion.GTPlayer.Instance.rightHandCenterVelocityTracker.GetAverageVelocity(true, 0);
+                                }
+                                else
+                                {
+                                    comp.velocity = GorillaLocomotion.GTPlayer.Instance.leftHandCenterVelocityTracker.GetAverageVelocity(true, 0);
+                                }
+
+                                UnityEngine.Object.Destroy(menu, 2);
+                                menu = null;
+
+                                UnityEngine.Object.Destroy(reference);
+                                reference = null;
                             }
-
-                            UnityEngine.Object.Destroy(menu, 2);
-                            menu = null;
-
-                            UnityEngine.Object.Destroy(reference);
-                            reference = null;
-                        }
-
-                        if (toOpen)
-                        {
-                            menu.transform.position = GTPlayer.Instance.leftControllerTransform.position;
-                            menu.transform.rotation = GTPlayer.Instance.leftControllerTransform.rotation;
-                        }
+                        } 
                     }
                 }
                 catch (Exception exc)
@@ -88,6 +85,14 @@ namespace WristMenu.Menu
                         if (fpsObject != null)
                         {
                             fpsObject.text = "FPS: " + Mathf.Ceil(1f / Time.unscaledDeltaTime).ToString();
+                        }
+
+                        if (pingObject != null)
+                        {
+                            if (PhotonNetwork.IsConnected)
+                            {
+                                pingObject.text = "Ping: " + PhotonNetwork.GetPing();
+                            }
                         }
 
                     // Execute Enabled mods
@@ -137,6 +142,8 @@ namespace WristMenu.Menu
                 menuBackground.GetComponent<Renderer>().material.color = backgroundColor.colors[0].color;
                 menuBackground.transform.position = new Vector3(0.05f, 0f, 0f);
 
+                RoundObj(menuBackground);
+
                 ColorChanger colorChanger = menuBackground.AddComponent<ColorChanger>();
                 colorChanger.colorInfo = backgroundColor;
                 colorChanger.Start();
@@ -148,7 +155,7 @@ namespace WristMenu.Menu
                 CanvasScaler canvasScaler = canvasObject.AddComponent<CanvasScaler>();
                 canvasObject.AddComponent<GraphicRaycaster>();
                 canvas.renderMode = RenderMode.WorldSpace;
-                canvasScaler.dynamicPixelsPerUnit = 1000f;
+                canvasScaler.dynamicPixelsPerUnit = 2500f;
 
             // Title and FPS
                 Text text = new GameObject
@@ -163,13 +170,13 @@ namespace WristMenu.Menu
                 text.fontSize = 1;
                 text.color = textColors[0];
                 text.supportRichText = true;
-                text.fontStyle = FontStyle.Italic;
+                //text.fontStyle = FontStyle.Italic;
                 text.alignment = TextAnchor.MiddleCenter;
                 text.resizeTextForBestFit = true;
                 text.resizeTextMinSize = 0;
                 RectTransform component = text.GetComponent<RectTransform>();
                 component.localPosition = Vector3.zero;
-                component.sizeDelta = new Vector2(0.28f, 0.05f);
+                component.sizeDelta = new Vector2(0.24f, 0.03f);
                 component.position = new Vector3(0.06f, 0f, 0.165f);
                 component.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
 
@@ -187,15 +194,41 @@ namespace WristMenu.Menu
                     fpsObject.color = textColors[0];
                     fpsObject.fontSize = 1;
                     fpsObject.supportRichText = true;
-                    fpsObject.fontStyle = FontStyle.Italic;
+                    //fpsObject.fontStyle = FontStyle.Italic;
                     fpsObject.alignment = TextAnchor.MiddleCenter;
                     fpsObject.horizontalOverflow = UnityEngine.HorizontalWrapMode.Overflow;
                     fpsObject.resizeTextForBestFit = true;
                     fpsObject.resizeTextMinSize = 0;
                     RectTransform component2 = fpsObject.GetComponent<RectTransform>();
                     component2.localPosition = Vector3.zero;
-                    component2.sizeDelta = new Vector2(0.28f, 0.02f);
-                    component2.position = new Vector3(0.06f, 0f, 0.135f);
+                    component2.sizeDelta = new Vector2(0.26f, 0.02f);
+                    component2.position = new Vector3(0.06f, 0.101f, 0.139f);
+                    component2.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
+                }
+
+                if (pingDisplay)
+                {
+                    pingObject = new GameObject
+                    {
+                        transform =
+                        {
+                            parent = canvasObject.transform
+                        }
+                    }.AddComponent<Text>();
+                    pingObject.font = currentFont;
+                    pingObject.text = "Ping: " + PhotonNetwork.GetPing();
+                    pingObject.color = textColors[0];
+                    pingObject.fontSize = 1;
+                    pingObject.supportRichText = true;
+                    //fpsObject.fontStyle = FontStyle.Italic;
+                    pingObject.alignment = TextAnchor.MiddleCenter;
+                    pingObject.horizontalOverflow = UnityEngine.HorizontalWrapMode.Overflow;
+                    pingObject.resizeTextForBestFit = true;
+                    pingObject.resizeTextMinSize = 0;
+                    RectTransform component2 = pingObject.GetComponent<RectTransform>();
+                    component2.localPosition = Vector3.zero;
+                    component2.sizeDelta = new Vector2(0.26f, 0.02f);
+                    component2.position = new Vector3(0.06f, -0.0963f, 0.139f);
                     component2.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
                 }
 
@@ -216,6 +249,8 @@ namespace WristMenu.Menu
                         disconnectbutton.transform.localPosition = new Vector3(0.56f, 0f, 0.6f);
                         disconnectbutton.GetComponent<Renderer>().material.color = buttonColors[0].colors[0].color;
                         disconnectbutton.AddComponent<Classes.Button>().relatedText = "Disconnect";
+
+                        RoundObj(disconnectbutton);
 
                         colorChanger = disconnectbutton.AddComponent<ColorChanger>();
                         colorChanger.colorInfo = buttonColors[0];
@@ -257,6 +292,8 @@ namespace WristMenu.Menu
                     gameObject.transform.localPosition = new Vector3(0.56f, 0.65f, 0);
                     gameObject.GetComponent<Renderer>().material.color = buttonColors[0].colors[0].color;
                     gameObject.AddComponent<Classes.Button>().relatedText = "PreviousPage";
+
+                    RoundObj(gameObject);
 
                     colorChanger = gameObject.AddComponent<ColorChanger>();
                     colorChanger.colorInfo = buttonColors[0];
@@ -328,6 +365,60 @@ namespace WristMenu.Menu
                     }
         }
 
+        public static void RoundObj(GameObject toRound)
+        {
+            float bevel = 0.02f;
+            Transform parent = menu.transform;
+
+            Renderer toRoundRenderer = toRound.GetComponent<Renderer>();
+            Vector3 pos = toRound.transform.localPosition;
+            Vector3 scale = toRound.transform.localScale;
+
+            Vector3 baseAScale = scale + new Vector3(0f, bevel * -2.55f, 0f);
+            Vector3 baseBScale = scale + new Vector3(0f, 0f, -bevel * 2f);
+            Vector3 roundCornerScale = new Vector3(bevel * 2.55f, scale.x / 2f, bevel * 2f);
+
+            Vector3 top = new Vector3(0f, (scale.y / 2f) - (bevel * 1.275f), (scale.z / 2f) - bevel);
+            Vector3 bottom = new Vector3(0f, -(scale.y / 2f) + (bevel * 1.275f), (scale.z / 2f) - bevel);
+            Vector3 topBack = new Vector3(0f, (scale.y / 2f) - (bevel * 1.275f), -(scale.z / 2f) + bevel);
+            Vector3 bottomBack = new Vector3(0f, -(scale.y / 2f) + (bevel * 1.275f), -(scale.z / 2f) + bevel);
+
+            GameObject CreatePiece(PrimitiveType type, Vector3 localPosition, Vector3 localScale, Quaternion rotation)
+            {
+                GameObject obj = GameObject.CreatePrimitive(type);
+                obj.transform.SetParent(parent, false);
+                obj.transform.localPosition = pos + localPosition;
+                obj.transform.localRotation = rotation;
+                obj.transform.localScale = localScale;
+
+                Renderer rend = obj.GetComponent<Renderer>();
+                rend.enabled = toRoundRenderer.enabled;
+
+                UnityEngine.Object.Destroy(obj.GetComponent<Collider>());
+                return obj;
+            }
+
+            Quaternion cylinderRot = Quaternion.Euler(0f, 0f, 90f);
+
+            GameObject[] toChange =
+            {
+                CreatePiece(PrimitiveType.Cube, Vector3.zero, baseAScale, Quaternion.identity),
+                CreatePiece(PrimitiveType.Cube, Vector3.zero, baseBScale, Quaternion.identity),
+                CreatePiece(PrimitiveType.Cylinder, top, roundCornerScale, cylinderRot),
+                CreatePiece(PrimitiveType.Cylinder, bottom, roundCornerScale, cylinderRot),
+                CreatePiece(PrimitiveType.Cylinder, topBack, roundCornerScale, cylinderRot),
+                CreatePiece(PrimitiveType.Cylinder, bottomBack, roundCornerScale, cylinderRot)
+            };
+
+            foreach (GameObject obj in toChange)
+            {
+                ClampColor cc = obj.AddComponent<ClampColor>();
+                cc.targetRenderer = toRoundRenderer;
+            }
+
+            toRoundRenderer.enabled = false;
+        }
+
         public static void CreateButton(float offset, ButtonInfo method)
         {
             GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -354,6 +445,8 @@ namespace WristMenu.Menu
             }
             colorChanger.Start();
 
+            RoundObj(gameObject);
+
             Text text = new GameObject
             {
                 transform =
@@ -378,12 +471,12 @@ namespace WristMenu.Menu
                 text.color = textColors[0];
             }
             text.alignment = TextAnchor.MiddleCenter;
-            text.fontStyle = FontStyle.Italic;
+            //text.fontStyle = FontStyle.Italic;
             text.resizeTextForBestFit = true;
             text.resizeTextMinSize = 0;
             RectTransform component = text.GetComponent<RectTransform>();
             component.localPosition = Vector3.zero;
-            component.sizeDelta = new Vector2(.2f, .03f);
+            component.sizeDelta = new Vector2(9f, 0.015f);
             component.localPosition = new Vector3(.064f, 0, .111f - offset / 2.6f);
             component.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
         }
@@ -429,13 +522,8 @@ namespace WristMenu.Menu
 
                 if (TPC != null)
                 {
-                    TPC.transform.position = new Vector3(-999f, -999f, -999f);
+                    TPC.transform.position = new Vector3(-67.9299f, 11.9144f, -84.2019f);
                     TPC.transform.rotation = Quaternion.identity;
-                    GameObject bg = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    bg.transform.localScale = new Vector3(10f, 10f, 0.01f);
-                    bg.transform.transform.position = TPC.transform.position + TPC.transform.forward;
-                    bg.GetComponent<Renderer>().material.color = new Color32((byte)(backgroundColor.colors[0].color.r * 50), (byte)(backgroundColor.colors[0].color.g * 50), (byte)(backgroundColor.colors[0].color.b * 50), 255);
-                    GameObject.Destroy(bg, Time.deltaTime);
                     menu.transform.parent = TPC.transform;
                     menu.transform.position = (TPC.transform.position + (Vector3.Scale(TPC.transform.forward, new Vector3(0.5f, 0.5f, 0.5f)))) + (Vector3.Scale(TPC.transform.up, new Vector3(-0.02f, -0.02f, -0.02f)));
                     Vector3 rot = TPC.transform.rotation.eulerAngles;
@@ -582,9 +670,10 @@ namespace WristMenu.Menu
                     public static SphereCollider buttonCollider;
                     public static Camera TPC;
                     public static Text fpsObject;
+                    public static Text pingObject;
 
         // Data
-            public static int pageNumber = 0;
+        public static int pageNumber = 0;
             public static int buttonsType = 0;
     }
 }

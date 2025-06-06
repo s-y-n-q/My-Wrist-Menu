@@ -6,7 +6,7 @@ namespace WristMenu
 {
     internal class Settings
     {
-        public static ExtGradient backgroundColor = new ExtGradient{isRainbow = true};
+        public static ExtGradient backgroundColor = new ExtGradient{};
         public static ExtGradient[] buttonColors = new ExtGradient[]
         {
             new ExtGradient{colors = GetSolidGradient(Color.black) }, // Disabled
@@ -21,6 +21,7 @@ namespace WristMenu
         public static Font currentFont = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
 
         public static bool fpsCounter = true;
+        public static bool pingDisplay = true;
         public static bool disconnectButton = true;
         public static bool rightHanded = false;
         public static bool disableNotifications = false;

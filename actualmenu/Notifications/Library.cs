@@ -45,7 +45,7 @@ namespace WristMenu.Notifications
                 }
             }.AddComponent<Text>();
             this.Testtext.text = "";
-            this.Testtext.fontSize = 30;
+            this.Testtext.fontSize = 10;
             this.Testtext.font = currentFont;
             this.Testtext.rectTransform.sizeDelta = new Vector2(260f, 70f);
             this.Testtext.alignment = TextAnchor.LowerLeft;
