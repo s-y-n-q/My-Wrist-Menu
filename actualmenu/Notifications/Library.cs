@@ -3,6 +3,7 @@ using System.Linq;
 using BepInEx;
 using UnityEngine;
 using UnityEngine.UI;
+using WristMenu.Menu;
 using static WristMenu.Settings;
 
 namespace WristMenu.Notifications
@@ -105,6 +106,7 @@ namespace WristMenu.Notifications
                         NotifiLib.NotifiText.text = NotifiLib.NotifiText.text + NotificationText;
                         NotifiLib.NotifiText.supportRichText = true;
                         NotifiLib.PreviousNotifi = NotificationText;
+                        //Main.playsound(BepInEx.Paths.PluginPath + "\\Ruby's Wrist Menu\\Sounds\\pop.wav");
                     }
                 }
                 catch

@@ -1,15 +1,17 @@
 ﻿using BepInEx;
+using CSCore;
 using HarmonyLib;
-using WristMenu.Classes;
-using WristMenu.Notifications;
+using Photon.Pun;
 using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using WristMenu.Classes;
+using WristMenu.Notifications;
+using static Fusion.Sockets.NetBitBuffer;
 using static WristMenu.Menu.Buttons;
 using static WristMenu.Settings;
-using Photon.Pun;
 
 namespace WristMenu.Menu
 {
@@ -20,6 +22,7 @@ namespace WristMenu.Menu
         // Constant
 
         public static bool ForceMenu;
+        public static AudioSource source;
 
         public static void Prefix()
         {
@@ -278,8 +281,9 @@ namespace WristMenu.Menu
                         rectt.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
                     }
 
-                // Page Buttons
-                    GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            // Page Buttons
+            CreatePageButtons();
+                    /*GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     if (!UnityInput.Current.GetKey(KeyCode.Q))
                     {
                         gameObject.layer = 2;
@@ -355,14 +359,14 @@ namespace WristMenu.Menu
                     component.localPosition = Vector3.zero;
                     component.sizeDelta = new Vector2(0.2f, 0.03f);
                     component.localPosition = new Vector3(0.064f, -0.195f, 0f);
-                    component.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
+                    component.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));*/
 
                 // Mod Buttons
                     ButtonInfo[] activeButtons = buttons[buttonsType].Skip(pageNumber * buttonsPerPage).Take(buttonsPerPage).ToArray();
                     for (int i = 0; i < activeButtons.Length; i++)
                     {
                         CreateButton(i * 0.1f, activeButtons[i]);
-                    }
+            }
         }
 
         public static void RoundObj(GameObject toRound)
@@ -419,6 +423,93 @@ namespace WristMenu.Menu
             toRoundRenderer.enabled = false;
         }
 
+
+        public static void CreatePageButtons()
+        {
+            // Previous Page
+            GameObject PreviousPage = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            if (!UnityInput.Current.GetKey(KeyCode.Q))
+            {
+                PreviousPage.layer = 2;
+            }
+            UnityEngine.Object.Destroy(PreviousPage.GetComponent<Rigidbody>());
+            PreviousPage.GetComponent<BoxCollider>().isTrigger = true;
+            PreviousPage.transform.parent = menu.transform;
+            PreviousPage.transform.rotation = Quaternion.identity;
+            PreviousPage.transform.localScale = new Vector3(0.09f, 0.9f, 0.08f);
+            PreviousPage.transform.localPosition = new Vector3(0.56f, 0f, 0.28f);
+            PreviousPage.AddComponent<Classes.Button>().relatedText = "PreviousPage";
+
+            ColorChanger colorChanger = PreviousPage.AddComponent<ColorChanger>();
+            colorChanger.colorInfo = buttonColors[0];
+            colorChanger.Start();
+
+            RoundObj(PreviousPage);
+
+            Text text = new GameObject
+            {
+                transform =
+                {
+                    parent = canvasObject.transform
+                }
+            }.AddComponent<Text>();
+            text.font = currentFont;
+            text.text = "◀";
+            text.supportRichText = true;
+            text.fontSize = 1;
+            text.alignment = TextAnchor.MiddleCenter;
+            //text.fontStyle = FontStyle.Italic;
+            text.resizeTextForBestFit = true;
+            text.resizeTextMinSize = 0;
+            RectTransform component = text.GetComponent<RectTransform>();
+            component.localPosition = Vector3.zero;
+            component.sizeDelta = new Vector2(9f, 0.015f);
+            component.localPosition = new Vector3(.064f, 0, .111f);
+            component.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
+
+            // Next Page
+
+            GameObject NextPage = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            if (!UnityInput.Current.GetKey(KeyCode.Q))
+            {
+                NextPage.layer = 2;
+            }
+            UnityEngine.Object.Destroy(NextPage.GetComponent<Rigidbody>());
+            NextPage.GetComponent<BoxCollider>().isTrigger = true;
+            NextPage.transform.parent = menu.transform;
+            NextPage.transform.rotation = Quaternion.identity;
+            NextPage.transform.localScale = new Vector3(0.09f, 0.9f, 0.08f);
+            NextPage.transform.localPosition = new Vector3(0.56f, 0f, 0.18f);
+            NextPage.AddComponent<Classes.Button>().relatedText = "NextPage";
+
+            ColorChanger colorChanger1 = NextPage.AddComponent<ColorChanger>();
+            colorChanger1.colorInfo = buttonColors[0];
+            colorChanger1.Start();
+
+            RoundObj(NextPage);
+
+            Text text1 = new GameObject
+            {
+                transform =
+                {
+                    parent = canvasObject.transform
+                }
+            }.AddComponent<Text>();
+            text1.font = currentFont;
+            text1.text = "▶";
+            text1.supportRichText = true;
+            text1.fontSize = 1;
+            text1.alignment = TextAnchor.MiddleCenter;
+            //text.fontStyle = FontStyle.Italic;
+            text1.resizeTextForBestFit = true;
+            text1.resizeTextMinSize = 0;
+            RectTransform component1 = text1.GetComponent<RectTransform>();
+            component1.localPosition = Vector3.zero;
+            component1.sizeDelta = new Vector2(9f, 0.015f);
+            component1.localPosition = new Vector3(0.064f, 0f, 0.0725f);
+            component1.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
+        }
+
         public static void CreateButton(float offset, ButtonInfo method)
         {
             GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -431,19 +522,17 @@ namespace WristMenu.Menu
             gameObject.transform.parent = menu.transform;
             gameObject.transform.rotation = Quaternion.identity;
             gameObject.transform.localScale = new Vector3(0.09f, 0.9f, 0.08f);
-            gameObject.transform.localPosition = new Vector3(0.56f, 0f, 0.28f - offset);
+            gameObject.transform.localPosition = new Vector3(0.56f, 0f, 0.08f - offset);
             gameObject.AddComponent<Classes.Button>().relatedText = method.buttonText;
 
-            ColorChanger colorChanger = gameObject.AddComponent<ColorChanger>();
             if (method.enabled)
             {
-                colorChanger.colorInfo = buttonColors[1];
+                gameObject.GetComponent<Renderer>().material.color = new Color32(119, 0, 255, 255);
             }
             else
             {
-                colorChanger.colorInfo = buttonColors[0];
+                gameObject.GetComponent<Renderer>().material.color = Color.black;
             }
-            colorChanger.Start();
 
             RoundObj(gameObject);
 
@@ -477,8 +566,29 @@ namespace WristMenu.Menu
             RectTransform component = text.GetComponent<RectTransform>();
             component.localPosition = Vector3.zero;
             component.sizeDelta = new Vector2(9f, 0.015f);
-            component.localPosition = new Vector3(.064f, 0, .111f - offset / 2.6f);
+            component.localPosition = new Vector3(0.064f, 0f, 0.0341f - offset / 2.6f);
             component.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
+        }
+
+        public static void playsound(string path)
+        {
+            using (WWW www = new WWW("file://" + path.Replace("\\", "/")))
+            {
+                AudioClip clip = www.GetAudioClip(false, false, AudioType.WAV);
+
+                if (clip == null)
+                {
+                    Debug.LogError("failed to load clip");
+                    return;
+                }
+
+                GameObject obj = new GameObject("PopSoundPlayer");
+                DontDestroyOnLoad(obj);
+
+                source = obj.AddComponent<AudioSource>();
+                source.clip = clip;
+                source.Play();
+            }
         }
 
         public static void RecreateMenu()
