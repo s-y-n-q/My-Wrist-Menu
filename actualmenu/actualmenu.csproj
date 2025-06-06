@@ -439,6 +439,7 @@
     <Compile Include="Menu\Buttons.cs" />
     <Compile Include="Menu\Main.cs" />
     <Compile Include="Menu\Settings.cs" />
+    <Compile Include="Mods\Gamemode.cs" />
     <Compile Include="Mods\Global.cs" />
     <Compile Include="Mods\Settings.cs" />
     <Compile Include="Notifications\Library.cs" />

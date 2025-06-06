@@ -10,18 +10,7 @@ namespace WristMenu.Menu
         {
             new ButtonInfo[] { // Main Mods
                 new ButtonInfo { buttonText = "Settings", method =() => SettingsMods.EnterSettings(), isTogglable = false, toolTip = "Opens the main settings page for the menu."},
-                new ButtonInfo { buttonText = "regular placeholder", isTogglable = false},
-                new ButtonInfo { buttonText = "togglable placeholder"},
-                new ButtonInfo { buttonText = "regular placeholder 2", isTogglable = false},
-                new ButtonInfo { buttonText = "togglable placeholder 2"},
-                new ButtonInfo { buttonText = "regular placeholder 3", isTogglable = false},
-                new ButtonInfo { buttonText = "togglable placeholder 3"},
-                new ButtonInfo { buttonText = "regular placeholder 4", isTogglable = false},
-                new ButtonInfo { buttonText = "togglable placeholder 4"},
-                new ButtonInfo { buttonText = "regular placeholder 5", isTogglable = false},
-                new ButtonInfo { buttonText = "togglable placeholder 5"},
-                new ButtonInfo { buttonText = "regular placeholder 6", isTogglable = false},
-                new ButtonInfo { buttonText = "togglable placeholder 6"},
+                new ButtonInfo { buttonText = "Tag All", method =() => Gamemode.TagAll(), isTogglable = false}
             },
 
             new ButtonInfo[] { // Settings
